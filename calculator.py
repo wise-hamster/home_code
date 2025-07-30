@@ -76,4 +76,7 @@ def start_calculator():
                 x = False
             else:
                 print('Unknown command, please repeat the input')
-start_calculator()
+
+if __name__ == "__main__":
+    print("Запуск калькулятора в режиме выполнения")
+    start_calculator()
