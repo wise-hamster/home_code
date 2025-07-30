@@ -58,22 +58,23 @@ def check_character():
         else:
             print('Incorrect character entered')
 
+def start_calculator():
+    print('To operate the calculator, follow the commands')
+    x = True
+    while x:
+        num_1_input = check_num()
+        sign_input = check_character()
+        num_2_input = check_num()
+        print(calculator(num_1_input, num_2_input, sign_input))
+        y = True
+        while y:
+            ex_or_co = input('To continue or exit, enter Y/N: ').strip().lower()
+            if ex_or_co == 'y':
+                y = False
+            elif ex_or_co == 'n':
+                y = False
+                x = False
+            else:
+                print('Unknown command, please repeat the input')
 
-print('To operate the calculator, follow the commands')
-
-x = True
-while x:
-    num_1_input = check_num()
-    sign_input = check_character()
-    num_2_input = check_num()
-    print(calculator(num_1_input, num_2_input, sign_input))
-    y = True
-    while y:
-        ex_or_co = input('To continue or exit, enter Y/N: ').strip().lower()
-        if ex_or_co == 'y':
-            y = False
-        elif ex_or_co == 'n':
-            y = False
-            x = False
-        else:
-            print('Unknown command, please repeat the input')
+start_calculator()
