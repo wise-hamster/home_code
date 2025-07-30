@@ -76,5 +76,4 @@ def start_calculator():
                 x = False
             else:
                 print('Unknown command, please repeat the input')
-
 start_calculator()
