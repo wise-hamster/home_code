@@ -5,14 +5,14 @@ from typing import List, Dict, Any
 from pydantic import BaseModel, Field
 import json
 
-def read_and_write_in_txt_file(list_ids=None):
+def read_and_write_in_txt_file(list_ids=None, file_name  = 'location_ids.txt'):
     if list_ids is not None:
-        with open('location_ids.txt', 'w', encoding='utf-8') as file:
+        with open(file_name, 'w', encoding='utf-8') as file:
             for line in list_ids:
                 file.write(line + '\n')
     else:
         list_ids = []
-        with open('location_ids.txt', 'r', encoding='utf-8') as file:
+        with open(file_name, 'r', encoding='utf-8') as file:
             lines = file.readlines()
             for line in lines:
                 point = line.strip('\n') 
@@ -34,6 +34,9 @@ class PostResponse(BaseModel):
     scope: str
     reference: str
     id: str
+
+class DeleteResponse(BaseModel):
+    status:str = Field(default='OK', description= 'Cheak status response')
 
 class GetResponse(BaseModel):
     location: Dict[str,str]
@@ -76,20 +79,47 @@ def post_request(json,count,schema,url = f'{URL.DOMEN.value}{URL.POST.value}', p
         print('Fail create a new txt-file with ids')
 
 def get_request(list_ids,schema,url = f'{URL.DOMEN.value}{URL.GET.value}', params = URL.KEY.value):
+    delete_ids = []
+    actual_ids = []
     try:
         for ids in list_ids:
             params['place_id'] = ids
             response = requests.get(url,params=params)
-            assert response.status_code == 200, f'ERROR: status code {response.status_code}'
-            assert schema(**response.json()), f'ERROR: schema is not valid {response.json()}'
-            print(f'{ids} in Database')
+            if response.status_code == 200:
+                assert schema(**response.json()), f'ERROR: schema is not valid {response.json()}'
+                actual_ids.append(ids)
+                print(f'{ids} in Database and txt')
+            elif response.status_code == 404:
+                delete_ids.append(ids)
+                print(f'{ids} not in Database and txt')
+
+        read_and_write_in_txt_file(actual_ids,'actual_ids')
+        print('Create actual_ids in txt file')
+        read_and_write_in_txt_file(delete_ids,'delete_ids')
+        print('Create delete_ids in txt file')
     except:
         print(f'Fail check {ids} in Database')
 
+def delete_request(list_ids,schema,url = f'{URL.DOMEN.value}{URL.DELETE.value}'):
+    body_2 = {"place_id":list_ids[1]}
+    body_4 = {"place_id":list_ids[3]}
+    try:
+        response = requests.delete(url=url,json=body_2)
+        assert response.status_code == 200, f'ERROR: status code {response.status_code}'
+        assert schema(**response.json()), f'ERROR: schema is not valid {response.json()}'
+        print(f'{list_ids[1]} delete')
+        response = requests.delete(url=url,json=body_4)
+        assert response.status_code == 200, f'ERROR: status code {response.status_code}'
+        assert schema(**response.json()), f'ERROR: schema is not valid {response.json()}'
+        print(f'{list_ids[3]} delete')
+    except:
+        print(f'Fail delete {list_ids[1]} and {list_ids[3]} in Database')
 
 body_1 = BodyRequest(location={"lat": -38.383494,"lng": 33.427362},accuracy=50,name = "Frontline house",
 phone_number = "(+91) 983 893 3937",address = "29, side layout, cohen 09",types = ["shoe park"],
 website = "http://google.com", language ="French-IN" )
 
 post_request(json=body_1.to_dict(),schema=PostResponse,count=5)
-get_request(read_and_write_in_txt_file(),GetResponse)
+ids_place = read_and_write_in_txt_file()
+delete_request(ids_place,DeleteResponse)
+get_request(ids_place,GetResponse)
